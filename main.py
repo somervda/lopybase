@@ -1,10 +1,10 @@
+from lwdata import data
 from network import LoRa
 import socket
 import time
 import ubinascii
 import pycom
 import struct
-import sys
 
 # Initialise LoRa in LORAWAN mode.
 # Please pick the region that matches where you are using the device:
@@ -23,7 +23,7 @@ time.sleep(1)
 
 # Set the power to 20db for US915
 # You can also set the default dr value but I found that was problematic
-# You need to turn on adr (auto dynamic range) at this point it it is to be used
+# You need to turn on adr (auto dynamic range) at this point if it is to be used
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.US915, adr=False, tx_power=20)
 
 # create an OTAA authentication parameters, change them to the provided credentials
@@ -85,7 +85,7 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
 # set the LoRaWAN data rate see https://docs.exploratory.engineering/lora/dr_sf/
 #  For data > 11 bytes the DR must be > 0
-s.setsockopt(socket.SOL_LORA, socket.SO_DR, 3)
+s.setsockopt(socket.SOL_LORA, socket.SO_DR, 2)
 
 # make the socket blocking
 # (waits for the data to be sent and for the 2 receive windows to expire)
@@ -106,12 +106,14 @@ while loop_count < 200:
     pycom.rgbled(0x00008b)  # dark blue
     time.sleep(.5)
     s.setblocking(True)
-    sensor_data = struct.pack('IIHI', 10, 513, 17, 400)
-    print("sensor_data", sensor_data, " Size:", struct.calcsize('IIHI'))
+    sensor_data = data(3, 6)
+    sensor_data.count = 4
+    sensor_data.hall = 27
+    print("sensor_data", sensor_data.pack(), " Size:", sensor_data.calcsize())
     # send some data
     print("Sending data:", loop_count)
 
-    s.send(sensor_data)
+    s.send(sensor_data.pack())
     pycom.rgbled(0x000000)  # off
     time.sleep(.5)
     s.setblocking(False)
