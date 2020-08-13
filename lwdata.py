@@ -1,5 +1,7 @@
+import struct
+
+
 class data:
-    import struct
     count = 1
     hall = 0
 
@@ -12,7 +14,3 @@ class data:
 
     def calcsize(self):
         return struct.calcsize('II')
-
-
-def nothing():
-    print("nothing")
