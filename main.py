@@ -1,10 +1,16 @@
-from lwdata import data
+from lwanhelper import payload
 from network import LoRa
 import socket
 import time
 import ubinascii
 import pycom
-import struct
+
+
+def blink(seconds, rgb):
+    pycom.rgbled(rgb)  # dark orange
+    time.sleep(seconds)
+    pycom.rgbled(0x000000)  # off
+
 
 # Initialise LoRa in LORAWAN mode.
 # Please pick the region that matches where you are using the device:
@@ -16,10 +22,8 @@ pycom.heartbeat(False)
 
 print("Device EUI:", ubinascii.hexlify(LoRa().mac()).upper())
 
-pycom.rgbled(0xff8f00)  # dark orange
-time.sleep(1)
-pycom.rgbled(0x000000)  # off
-time.sleep(1)
+blink(1, 0xff8f00)  # dark orange
+
 
 # Set the power to 20db for US915
 # You can also set the default dr value but I found that was problematic
@@ -69,62 +73,32 @@ lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
 print('Joining', end='')
 while not lora.has_joined():
     time.sleep(2.5)
-    pycom.rgbled(0xff8f00)  # dark orange
-    time.sleep(.5)
-    pycom.rgbled(0x000000)  # off
+    blink(.5, 0xff8f00)  # dark orange
     print('.', end='')
 
 print('')
 print('Joined')
-pycom.rgbled(0x006400)  # dark green
-time.sleep(2)
-pycom.rgbled(0x000000)  # off
-time.sleep(.5)
+blink(2, 0x006400)  # dark green
 # create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 
 # set the LoRaWAN data rate see https://docs.exploratory.engineering/lora/dr_sf/
 #  For data > 11 bytes the DR must be > 0
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 2)
-
-# make the socket blocking
-# (waits for the data to be sent and for the 2 receive windows to expire)
 loop_count = 0
 
-# struct sensor_data_struct
-# {
-#   uint32_t count;
-#   uint32_t hall;
-#   uint16_t data1;
-#   uint8_t data2;
-#   uint8_t data3;
-#   uint32_t data4;
-# };
-
+sensor_data = payload(loop_count, 50)
 
 while loop_count < 200:
-    pycom.rgbled(0x00008b)  # dark blue
-    time.sleep(.5)
+    blink(.5, 0x00008b)  # dark blue
     s.setblocking(True)
-    sensor_data = data(3, 6)
-    sensor_data.count = 4
-    sensor_data.hall = 27
+    sensor_data.count = loop_count
+    sensor_data.hall = loop_count + 6
     print("sensor_data", sensor_data.pack(), " Size:", sensor_data.calcsize())
     # send some data
     print("Sending data:", loop_count)
-
     s.send(sensor_data.pack())
-    pycom.rgbled(0x000000)  # off
-    time.sleep(.5)
     s.setblocking(False)
-
-    # make the socket non-blocking
-    # (because if there's no data received it will block forever...)
-    # s.setblocking(False)
-
-    # # get any data received (if any...)
-    # data = s.recv(64)
-    # print(data)
     time.sleep(10)
     loop_count += 1
 lora.power_mode(LoRa.SLEEP)
