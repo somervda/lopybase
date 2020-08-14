@@ -1,16 +1,9 @@
-from lwanhelper import payload
+from lopyhelper import gps_payload, sensor_payload, blink
 from network import LoRa
 import socket
 import time
 import ubinascii
 import pycom
-
-
-def blink(seconds, rgb):
-    pycom.rgbled(rgb)  # dark orange
-    time.sleep(seconds)
-    pycom.rgbled(0x000000)  # off
-
 
 # Initialise LoRa in LORAWAN mode.
 # Please pick the region that matches where you are using the device:
@@ -87,18 +80,25 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 2)
 loop_count = 0
 
-sensor_data = payload(loop_count, 50)
+sensor_data = sensor_payload(-23, 70, 2, 126)
+gps_data = gps_payload(-75.30223, 40.17467)
+s.setblocking(False)
 
-while loop_count < 200:
+while loop_count < 10:
+    # send sensor data, note keep the payload size below 11 bytes if possable for
+    # most data rate options
     blink(.5, 0x00008b)  # dark blue
-    s.setblocking(True)
-    sensor_data.count = loop_count
-    sensor_data.hall = loop_count + 6
-    print("sensor_data", sensor_data.pack(), " Size:", sensor_data.calcsize())
-    # send some data
-    print("Sending data:", loop_count)
+    s.bind(1)
+    print("Sending data:", loop_count, "gps_data",
+          gps_data.pack(), " Size:", gps_data.calcsize())
+    s.send(gps_data.pack())
+    time.sleep(1)
+
+    blink(.5, 0x00008b)  # dark blue
+    s.bind(2)
+    print("Sending data:", loop_count, "sensor_data",
+          sensor_data.pack(), " Size:", sensor_data.calcsize())
     s.send(sensor_data.pack())
-    s.setblocking(False)
     time.sleep(10)
     loop_count += 1
 lora.power_mode(LoRa.SLEEP)
