@@ -5,13 +5,14 @@ from network import LoRa
 
 
 def blink(seconds, rgb):
-    pycom.rgbled(rgb)  # dark orange
+    pycom.rgbled(rgb)
     time.sleep(seconds)
     pycom.rgbled(0x000000)  # off
 
 
 def setUSFrequencyPlan(lora):
-    # remove all US915 the channels
+    """ Sets the frequency plan that matches the TTN gateway in the USA """
+    # remove all US915 channels
     for channel in range(0, 72):
         lora.remove_channel(channel)
 
@@ -41,12 +42,14 @@ def setUSFrequencyPlan(lora):
 
 
 def join(app_eui, app_key, useADR):
+    """ Join the Lorawan network using OTAA. new lora session is returned """
     # Set the power to 20db for US915
     # You can also set the default dr value but I found that was problematic
     # You need to turn on adr (auto data rate) at this point if it is to be used
     # only use adr for static devices (Not moving)
     # see https://lora-developers.semtech.com/library/tech-papers-and-guides/understanding-adr/
-    lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.US915, adr=useADR, tx_power=20)
+    lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.US915,
+                adr=useADR, tx_power=20)
     setUSFrequencyPlan(lora)
 
     print('Joining', end='')
@@ -59,7 +62,6 @@ def join(app_eui, app_key, useADR):
     print('')
     print('Joined')
     blink(2, 0x006400)  # dark green
-
     return lora
 
 
@@ -70,13 +72,9 @@ def send(lora, socket, port, data, useADR):
     socket.bind(port)
     print("Sending data:", data)
     socket.send(data)
-    # adr sends back data to the node that can interfere with the socket
-    # bolcking so give it a few seconds to be returned before switching
-    #  the socket blocking mode
-    if useADR:
-        time.sleep(1)
-    else:
-        time.sleep(1)
+    # Give send a extra second to be returned before switching
+    #  the socket blocking mode (May not need this)
+    time.sleep(1)
     socket.setblocking(False)
     lora.nvram_save()
 

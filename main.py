@@ -8,19 +8,16 @@ import config
 import machine
 
 
+# Basic setup, get the Device EUI for use in TTN device config.
 pycom.heartbeat(False)
 print("Device EUI:", ubinascii.hexlify(LoRa().mac()).upper())
 blink(1, 0xff8f00)  # dark orange
 
-
+# Continue session if waking up from deep sleep, else start a new lorawan session
 if machine.reset_cause() == machine.DEEPSLEEP_RESET:
-    # lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.US915,
-    #             adr=config.useADR, tx_power=20)
     lora = LoRa(mode=LoRa.LORAWAN)
     lora.nvram_restore()
     if lora.has_joined():
-        # setUSFrequencyPlan(lora)
-        # counter = pycom.nvs_get('counter')
         print("Using existing join")
     else:
         lora = join(config.app_eui, config.app_key, config.useADR)
@@ -41,16 +38,11 @@ if config.useADR:
     lora_socket.setsockopt(socket.SOL_LORA, socket.SO_DR, 3)
 
 # Initialize data for the lorawan send loop
-
-
-# Setting blocking to false with a delay after each send seems more
-# reliable than blocking=true and no send delays
-
 sensor_data = sensor_payload(-23, 70, 2, 126)
 gps_data = gps_payload(-75.30223, 40.17467)
 
 # send sensor data, note keep the payload size below 11 bytes if possable for
-# most data rate options
+# most data rate options (Example splits data into 2 sends)
 
 #  Send location
 send(lora, lora_socket, 1, gps_data.pack(), config.useADR)
@@ -58,5 +50,5 @@ send(lora, lora_socket, 1, gps_data.pack(), config.useADR)
 #  Send sensor data
 send(lora, lora_socket, 2, sensor_data.pack(), config.useADR)
 
-print("before deepsleep")
-machine.deepsleep(10 * 1000)
+print("Sleeping....")
+machine.deepsleep(60 * 1000)

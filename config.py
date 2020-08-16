@@ -9,4 +9,4 @@ app_key = ubinascii.unhexlify('0EBC5B22864A8506DAC60B95CC270212')
 #  It may have something to do with the adr being sent from the gateway and
 # not being saved after a deepsleep, there are some rules about not stepping between more than one dr
 # at a time?
-useADR = False
+useADR = True
