@@ -65,13 +65,13 @@ def join(app_eui, app_key, useADR):
     return lora
 
 
-def send(lora, socket, port, data, useADR):
+def send(lora, socket, port, payload, useADR):
     """ send data to the lorawan gateway on selected port """
     blink(.5, 0x00008b)  # dark blue
     socket.setblocking(True)
     socket.bind(port)
-    print("Sending data:", data)
-    socket.send(data)
+    print("Sending data:", payload.pack(), " Size:", payload.calcsize())
+    socket.send(payload.pack())
     # Give send a extra second to be returned before switching
     #  the socket blocking mode (May not need this)
     time.sleep(1)
@@ -84,6 +84,7 @@ class gps_payload:
     update the class properties and struct definition for the particular use case """
     longitude = 0
     latitude = 0
+    pack_format = "ff"
 
     def __init__(self, longitude, latitude):
         self.longitude = longitude  # Float
@@ -92,10 +93,10 @@ class gps_payload:
     # see format options here https://docs.python.org/2/library/struct.html#format-characters
     # Noter: use single precision float f for GPS Lng/Lat to get locations down to a meter
     def pack(self):
-        return struct.pack('ff', self.longitude, self.latitude)
+        return struct.pack(self.pack_format, self.longitude, self.latitude)
 
     def calcsize(self):
-        return struct.calcsize('ff')
+        return struct.calcsize(self.pack_format)
 
 
 class sensor_payload:
@@ -105,6 +106,7 @@ class sensor_payload:
     humidity = 0
     waterlevel = 0
     voltage = 0
+    pack_format = "bBBB"
 
     def __init__(self, celsius, humidity, waterlevel, voltage):
         self.celsius = celsius  # In +/- celsius
@@ -114,7 +116,7 @@ class sensor_payload:
 
     # see format options here https://docs.python.org/2/library/struct.html#format-characters
     def pack(self):
-        return struct.pack('bBBB',  self.celsius, self.humidity, self.waterlevel, self.voltage)
+        return struct.pack(self.pack_format,  self.celsius, self.humidity, self.waterlevel, self.voltage)
 
     def calcsize(self):
-        return struct.calcsize('bBBB')
+        return struct.calcsize(self.pack_format)
