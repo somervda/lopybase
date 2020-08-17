@@ -11,6 +11,7 @@ import machine
 # Basic setup, get the Device EUI for use in TTN device config.
 pycom.heartbeat(False)
 print("Device EUI:", ubinascii.hexlify(LoRa().mac()).upper())
+print("adr=", config.useADR)
 blink(1, 0xff8f00)  # dark orange
 
 # Continue session if waking up from deep sleep, else start a new lorawan session
