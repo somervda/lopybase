@@ -24,8 +24,9 @@ if True:
     lora = LoRa(mode=LoRa.LORAWAN)
     lora.nvram_restore()
     if lora.has_joined():
-        print("Using existing join")
+        print("Using existing session.")
     else:
+        print("No existing session.")
         lora = join(config.app_eui, config.app_key, config.useADR)
 else:
     lora = join(config.app_eui, config.app_key, config.useADR)
