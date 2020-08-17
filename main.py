@@ -15,7 +15,12 @@ print("adr=", config.useADR)
 blink(1, 0xff8f00)  # dark orange
 
 # Continue session if waking up from deep sleep, else start a new lorawan session
-if machine.reset_cause() == machine.DEEPSLEEP_RESET:
+# Note: Comment out one of the next 2 lines - when doing development , in most
+# cases I can use the nvram_save() info and skip the join. In production
+# only the deepsleep restore should use the saved lora info
+
+# if machine.reset_cause() == machine.DEEPSLEEP_RESET
+if True:
     lora = LoRa(mode=LoRa.LORAWAN)
     lora.nvram_restore()
     if lora.has_joined():
@@ -42,7 +47,7 @@ sensor_data = sensor_payload(-23, 70, 2, 126)
 gps_data = gps_payload(-75.30223, 40.17467)
 
 # send sensor data, note keep the payload size below 11 bytes if possable for
-# most data rate options (Example splits data into 2 sends)
+# most data rate options (Example splits data into 2 data objects and sends)
 
 #  Send location
 send(lora, lora_socket, 1, gps_data, config.useADR)
@@ -51,4 +56,4 @@ send(lora, lora_socket, 1, gps_data, config.useADR)
 send(lora, lora_socket, 2, sensor_data, config.useADR)
 
 print("Sleeping....")
-# machine.deepsleep(60 * 1000)
+machine.deepsleep(60 * 1000)
