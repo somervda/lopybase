@@ -57,4 +57,7 @@ send(lora, lora_socket, 1, gps_data, config.useADR)
 send(lora, lora_socket, 2, sensor_data, config.useADR)
 
 print("Sleeping....")
-machine.deepsleep(60 * 1000)
+blink(.2, 0xff0000)  # dark orange
+time.sleep(.2)
+blink(.2, 0xff0000)  # dark orange
+machine.deepsleep(20 * 1000)
