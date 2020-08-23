@@ -1,13 +1,15 @@
 import struct
 import pycom
 import time
+import config
 from network import LoRa
 
 
 def blink(seconds, rgb):
-    pycom.rgbled(rgb)
-    time.sleep(seconds)
-    pycom.rgbled(0x000000)  # off
+    if config.blinkLED:
+        pycom.rgbled(rgb)
+        time.sleep(seconds)
+        pycom.rgbled(0x000000)  # off
 
 
 def setUSFrequencyPlan(lora):
