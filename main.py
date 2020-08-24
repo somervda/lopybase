@@ -60,4 +60,4 @@ print("Sleeping....")
 blink(.2, 0xff0000)  # dark orange
 time.sleep(.2)
 blink(.2, 0xff0000)  # dark orange
-machine.deepsleep(20 * 1000)
+machine.deepsleep(300 * 1000)
